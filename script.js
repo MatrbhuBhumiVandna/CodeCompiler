@@ -5,14 +5,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const runBtn = document.getElementById('run-btn');
     const saveBtn = document.getElementById('save-btn');
     const currentFileDisplay = document.getElementById('current-file');
+    const directoryTree = document.getElementById('directory-tree');
     
     // Tab bars
-    const projectTabBar = document.querySelector('.project-tab-bar');
-    const folderTabBar = document.querySelector('.folder-tab-bar');
-    const fileTabBar = document.querySelector('.file-tab-bar');
-    
-    // Directory tree
-    const directoryTree = document.getElementById('directory-tree');
+    const projectTabBar = document.getElementById('project-tab-bar');
+    const folderTabBar = document.getElementById('folder-tab-bar');
+    const fileTabBar = document.getElementById('file-tab-bar');
     
     // Add buttons
     const addProjectBtn = document.getElementById('add-project');
@@ -38,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentFile = 'file-1';
     
     // Sample data structure
-    const projects = {
+    let projects = {
         'project-1': {
             name: 'My Project',
             folders: {
@@ -123,15 +121,17 @@ p {
     
     // Initialize the editor
     function init() {
+        renderAll();
+        loadFile(currentFile);
+        setupEventListeners();
+    }
+    
+    // Render all UI components
+    function renderAll() {
         renderProjectTabs();
         renderFolderTabs();
         renderFileTabs();
         renderDirectoryTree();
-        loadFile(currentFile);
-        updatePreview();
-        
-        // Add event listeners
-        setupEventListeners();
     }
     
     // Set up all event listeners
@@ -144,24 +144,18 @@ p {
         
         // Editor content change
         editor.addEventListener('input', function() {
-            // Auto-save after a delay
             clearTimeout(this.saveTimeout);
             this.saveTimeout = setTimeout(saveCurrentFile, 1000);
         });
         
         // Add buttons
-        addProjectBtn.addEventListener('click', () => {
-            document.getElementById('project-name').value = '';
-            showModal(newProjectModal);
-        });
-        
+        addProjectBtn.addEventListener('click', () => showModal(newProjectModal));
         addFolderBtn.addEventListener('click', () => {
-            document.getElementById('folder-name').value = '';
+            if (!currentProject) return;
             showModal(newFolderModal);
         });
-        
         addFileBtn.addEventListener('click', () => {
-            document.getElementById('file-name').value = '';
+            if (!currentProject || !currentFolder) return;
             showModal(newFileModal);
         });
         
@@ -183,40 +177,33 @@ p {
         });
     }
     
-    // Show modal with animation
+    // Show modal
     function showModal(modal) {
         modal.style.display = 'flex';
-        setTimeout(() => {
-            modal.querySelector('.modal-content').classList.add('modal-show');
-        }, 10);
     }
     
-    // Hide modal with animation
+    // Hide modal
     function hideModal(modal) {
-        modal.querySelector('.modal-content').classList.remove('modal-show');
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 200);
+        modal.style.display = 'none';
     }
     
     // Render project tabs
     function renderProjectTabs() {
-        projectTabBar.innerHTML = '';
+        // Clear existing tabs except the add button
+        while (projectTabBar.firstChild !== addProjectBtn) {
+            projectTabBar.removeChild(projectTabBar.firstChild);
+        }
         
+        // Add tabs for each project
         for (const projectId in projects) {
             const project = projects[projectId];
-            const isActive = projectId === currentProject;
+            const tab = createTab(projectId, project.name, 'fa-folder-open', projectId === currentProject);
             
-            const tab = document.createElement('div');
-            tab.className = `tab ${isActive ? 'active' : ''}`;
-            tab.dataset.id = projectId;
-            tab.innerHTML = `
-                <span class="tab-icon"><i class="fas fa-folder-open"></i></span>
-                <span class="tab-label">${project.name}</span>
-                <button class="close-btn"><i class="fas fa-times"></i></button>
-            `;
-            
-            tab.addEventListener('click', () => switchProject(projectId));
+            tab.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('close-btn')) {
+                    switchProject(projectId);
+                }
+            });
             
             const closeBtn = tab.querySelector('.close-btn');
             closeBtn.addEventListener('click', (e) => {
@@ -230,25 +217,24 @@ p {
     
     // Render folder tabs
     function renderFolderTabs() {
-        folderTabBar.innerHTML = '';
+        // Clear existing tabs except the add button
+        while (folderTabBar.firstChild !== addFolderBtn) {
+            folderTabBar.removeChild(folderTabBar.firstChild);
+        }
         
         const project = projects[currentProject];
         if (!project) return;
         
+        // Add tabs for each folder in current project
         for (const folderId in project.folders) {
             const folder = project.folders[folderId];
-            const isActive = folderId === currentFolder;
+            const tab = createTab(folderId, folder.name, 'fa-folder', folderId === currentFolder);
             
-            const tab = document.createElement('div');
-            tab.className = `tab ${isActive ? 'active' : ''}`;
-            tab.dataset.id = folderId;
-            tab.innerHTML = `
-                <span class="tab-icon"><i class="fas fa-folder"></i></span>
-                <span class="tab-label">${folder.name}</span>
-                <button class="close-btn"><i class="fas fa-times"></i></button>
-            `;
-            
-            tab.addEventListener('click', () => switchFolder(folderId));
+            tab.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('close-btn')) {
+                    switchFolder(folderId);
+                }
+            });
             
             const closeBtn = tab.querySelector('.close-btn');
             closeBtn.addEventListener('click', (e) => {
@@ -262,25 +248,24 @@ p {
     
     // Render file tabs
     function renderFileTabs() {
-        fileTabBar.innerHTML = '';
+        // Clear existing tabs except the add button
+        while (fileTabBar.firstChild !== addFileBtn) {
+            fileTabBar.removeChild(fileTabBar.firstChild);
+        }
         
         const folder = getCurrentFolder();
         if (!folder) return;
         
+        // Add tabs for each file in current folder
         for (const fileId in folder.files) {
             const file = folder.files[fileId];
-            const isActive = fileId === currentFile;
+            const tab = createTab(fileId, file.name, 'fa-file-code', fileId === currentFile);
             
-            const tab = document.createElement('div');
-            tab.className = `tab ${isActive ? 'active' : ''}`;
-            tab.dataset.id = fileId;
-            tab.innerHTML = `
-                <span class="tab-icon"><i class="fas fa-file-code"></i></span>
-                <span class="tab-label">${file.name}</span>
-                <button class="close-btn"><i class="fas fa-times"></i></button>
-            `;
-            
-            tab.addEventListener('click', () => switchFile(fileId));
+            tab.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('close-btn')) {
+                    switchFile(fileId);
+                }
+            });
             
             const closeBtn = tab.querySelector('.close-btn');
             closeBtn.addEventListener('click', (e) => {
@@ -292,6 +277,19 @@ p {
         }
     }
     
+    // Create a tab element
+    function createTab(id, name, icon, isActive) {
+        const tab = document.createElement('div');
+        tab.className = `tab ${isActive ? 'active' : ''}`;
+        tab.dataset.id = id;
+        tab.innerHTML = `
+            <span class="tab-icon"><i class="fas ${icon}"></i></span>
+            <span class="tab-label">${name}</span>
+            <button class="close-btn"><i class="fas fa-times"></i></button>
+        `;
+        return tab;
+    }
+    
     // Render directory tree
     function renderDirectoryTree() {
         directoryTree.innerHTML = '';
@@ -300,94 +298,107 @@ p {
         
         for (const projectId in projects) {
             const project = projects[projectId];
-            const isActiveProject = projectId === currentProject;
-            
-            const projectLi = document.createElement('li');
-            projectLi.className = `project-item ${isActiveProject ? 'expanded' : ''}`;
-            projectLi.dataset.id = projectId;
-            
-            const projectNode = document.createElement('div');
-            projectNode.className = 'tree-node';
-            projectNode.innerHTML = `
-                <span class="toggle"><i class="fas fa-chevron-down"></i></span>
-                <span class="icon"><i class="fas fa-folder-open"></i></span>
-                <span class="label">${project.name}</span>
-            `;
-            
-            projectNode.addEventListener('click', () => {
-                projectLi.classList.toggle('expanded');
-                if (projectId !== currentProject) {
-                    switchProject(projectId);
-                }
-            });
+            const projectItem = createTreeItem(
+                projectId, 
+                project.name, 
+                'project-item', 
+                'fa-folder-open', 
+                projectId === currentProject
+            );
             
             const folderUl = document.createElement('ul');
             
             for (const folderId in project.folders) {
                 const folder = project.folders[folderId];
-                const isActiveFolder = folderId === currentFolder && isActiveProject;
-                
-                const folderLi = document.createElement('li');
-                folderLi.className = `folder-item ${isActiveFolder ? 'expanded' : ''}`;
-                folderLi.dataset.id = folderId;
-                
-                const folderNode = document.createElement('div');
-                folderNode.className = 'tree-node';
-                folderNode.innerHTML = `
-                    <span class="toggle"><i class="fas fa-chevron-down"></i></span>
-                    <span class="icon"><i class="fas fa-folder"></i></span>
-                    <span class="label">${folder.name}</span>
-                `;
-                
-                folderNode.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('toggle') || e.target.classList.contains('fa-chevron-down')) {
-                        folderLi.classList.toggle('expanded');
-                    } else {
-                        if (folderId !== currentFolder || projectId !== currentProject) {
-                            switchProject(projectId);
-                            switchFolder(folderId);
-                        }
-                    }
-                });
+                const folderItem = createTreeItem(
+                    folderId,
+                    folder.name,
+                    'folder-item',
+                    'fa-folder',
+                    folderId === currentFolder && projectId === currentProject
+                );
                 
                 const fileUl = document.createElement('ul');
                 
                 for (const fileId in folder.files) {
                     const file = folder.files[fileId];
-                    const isActiveFile = fileId === currentFile && isActiveFolder;
+                    const fileItem = createTreeItem(
+                        fileId,
+                        file.name,
+                        'file-item',
+                        'fa-file-code',
+                        fileId === currentFile && folderId === currentFolder && projectId === currentProject,
+                        false
+                    );
                     
-                    const fileLi = document.createElement('li');
-                    fileLi.className = `file-item ${isActiveFile ? 'active' : ''}`;
-                    fileLi.dataset.id = fileId;
-                    
-                    const fileNode = document.createElement('div');
-                    fileNode.className = 'tree-node';
-                    fileNode.innerHTML = `
-                        <span class="icon"><i class="fas fa-file-code"></i></span>
-                        <span class="label">${file.name}</span>
-                    `;
-                    
-                    fileNode.addEventListener('click', () => {
+                    fileItem.addEventListener('click', () => {
                         if (projectId !== currentProject) switchProject(projectId);
                         if (folderId !== currentFolder) switchFolder(folderId);
                         switchFile(fileId);
                     });
                     
-                    fileLi.appendChild(fileNode);
-                    fileUl.appendChild(fileLi);
+                    fileUl.appendChild(fileItem);
                 }
                 
-                folderLi.appendChild(folderNode);
-                folderLi.appendChild(fileUl);
-                folderUl.appendChild(folderLi);
+                folderItem.addEventListener('click', (e) => {
+                    const isToggle = e.target.classList.contains('toggle') || 
+                                    e.target.classList.contains('fa-chevron-down');
+                    
+                    if (isToggle) {
+                        folderItem.classList.toggle('expanded');
+                    } else {
+                        if (projectId !== currentProject) switchProject(projectId);
+                        if (folderId !== currentFolder) switchFolder(folderId);
+                    }
+                });
+                
+                folderItem.appendChild(fileUl);
+                folderUl.appendChild(folderItem);
             }
             
-            projectLi.appendChild(projectNode);
-            projectLi.appendChild(folderUl);
-            ul.appendChild(projectLi);
+            projectItem.addEventListener('click', (e) => {
+                const isToggle = e.target.classList.contains('toggle') || 
+                                e.target.classList.contains('fa-chevron-down');
+                
+                if (isToggle) {
+                    projectItem.classList.toggle('expanded');
+                } else {
+                    if (projectId !== currentProject) switchProject(projectId);
+                }
+            });
+            
+            projectItem.appendChild(folderUl);
+            ul.appendChild(projectItem);
         }
         
         directoryTree.appendChild(ul);
+    }
+    
+    // Create a tree item
+    function createTreeItem(id, name, type, icon, isActive, isExpandable = true) {
+        const li = document.createElement('li');
+        li.className = `${type} ${isActive ? 'expanded' : ''}`;
+        li.dataset.id = id;
+        
+        const node = document.createElement('div');
+        node.className = 'tree-node';
+        
+        if (isExpandable) {
+            node.innerHTML = `
+                <span class="toggle"><i class="fas fa-chevron-down"></i></span>
+                <span class="icon"><i class="fas ${icon}"></i></span>
+                <span class="label">${name}</span>
+            `;
+        } else {
+            node.innerHTML = `
+                <span class="icon"><i class="fas ${icon}"></i></span>
+                <span class="label">${name}</span>
+            `;
+            if (isActive) li.classList.add('active');
+        }
+        
+        li.appendChild(node);
+        return li;
     }
     
     // Switch project
@@ -395,13 +406,21 @@ p {
         if (projectId === currentProject) return;
         
         currentProject = projectId;
-        currentFolder = Object.keys(projects[projectId].folders)[0];
-        currentFile = Object.keys(projects[projectId].folders[currentFolder].files)[0];
+        const project = projects[projectId];
         
-        renderProjectTabs();
-        renderFolderTabs();
-        renderFileTabs();
-        renderDirectoryTree();
+        // Set first folder as current
+        const folderIds = Object.keys(project.folders);
+        if (folderIds.length > 0) {
+            currentFolder = folderIds[0];
+            
+            // Set first file as current
+            const fileIds = Object.keys(project.folders[currentFolder].files);
+            if (fileIds.length > 0) {
+                currentFile = fileIds[0];
+            }
+        }
+        
+        renderAll();
         loadFile(currentFile);
     }
     
@@ -410,7 +429,13 @@ p {
         if (folderId === currentFolder) return;
         
         currentFolder = folderId;
-        currentFile = Object.keys(getCurrentFolder().files)[0];
+        const folder = getCurrentFolder();
+        
+        // Set first file as current
+        const fileIds = Object.keys(folder.files);
+        if (fileIds.length > 0) {
+            currentFile = fileIds[0];
+        }
         
         renderFolderTabs();
         renderFileTabs();
@@ -440,7 +465,7 @@ p {
     
     // Load file into editor
     function loadFile(fileId) {
-        const file = getCurrentFolder()?.files[fileId];
+        const file = getCurrentFile();
         if (!file) return;
         
         editor.value = file.content;
@@ -453,6 +478,7 @@ p {
         if (!file) return;
         
         file.content = editor.value;
+        console.log('File saved:', file.name);
     }
     
     // Update preview
@@ -471,13 +497,9 @@ p {
             const folder = project.folders[folderId];
             for (const fileId in folder.files) {
                 const file = folder.files[fileId];
-                if (file.type === 'html') {
-                    html = file.content;
-                } else if (file.type === 'css') {
-                    css = file.content;
-                } else if (file.type === 'js') {
-                    js = file.content;
-                }
+                if (file.type === 'html') html = file.content;
+                else if (file.type === 'css') css = file.content;
+                else if (file.type === 'js') js = file.content;
             }
         }
         
@@ -514,7 +536,6 @@ p {
 </head>
 <body>
     <h1>${name}</h1>
-    <p>Start coding here!</p>
 </body>
 </html>`
                         }
@@ -575,7 +596,7 @@ p {
                 `<!DOCTYPE html>
 <html>
 <head>
-    <title>New HTML File</title>
+    <title>New File</title>
 </head>
 <body>
     
@@ -598,8 +619,6 @@ p {
         }
         
         delete projects[projectId];
-        
-        // Switch to another project
         const remainingProjectId = Object.keys(projects)[0];
         switchProject(remainingProjectId);
     }
@@ -613,8 +632,6 @@ p {
         }
         
         delete project.folders[folderId];
-        
-        // Switch to another folder
         const remainingFolderId = Object.keys(project.folders)[0];
         switchFolder(remainingFolderId);
     }
@@ -628,8 +645,6 @@ p {
         }
         
         delete folder.files[fileId];
-        
-        // Switch to another file
         const remainingFileId = Object.keys(folder.files)[0];
         switchFile(remainingFileId);
     }
