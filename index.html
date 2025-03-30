@@ -10,46 +10,24 @@
 <body>
     <div class="app-container">
         <!-- Project Tab Bar -->
-        <div class="tab-bar project-tab-bar">
-            <div class="tab active" data-id="project-1">
-                <span class="tab-icon"><i class="fas fa-folder-open"></i></span>
-                <span class="tab-label">My Project</span>
-                <button class="close-btn"><i class="fas fa-times"></i></button>
-            </div>
+        <div class="tab-bar project-tab-bar" id="project-tab-bar">
+            <!-- Tabs will be added here by JavaScript -->
             <button class="add-btn" id="add-project">
                 <i class="fas fa-plus"></i> New Project
             </button>
         </div>
 
         <!-- Folder Tab Bar -->
-        <div class="tab-bar folder-tab-bar">
-            <div class="tab active" data-id="folder-1">
-                <span class="tab-icon"><i class="fas fa-folder"></i></span>
-                <span class="tab-label">Main</span>
-                <button class="close-btn"><i class="fas fa-times"></i></button>
-            </div>
+        <div class="tab-bar folder-tab-bar" id="folder-tab-bar">
+            <!-- Tabs will be added here by JavaScript -->
             <button class="add-btn" id="add-folder">
                 <i class="fas fa-plus"></i> New Folder
             </button>
         </div>
 
         <!-- File Tab Bar -->
-        <div class="tab-bar file-tab-bar">
-            <div class="tab active" data-id="file-1">
-                <span class="tab-icon"><i class="fas fa-file-code"></i></span>
-                <span class="tab-label">index.html</span>
-                <button class="close-btn"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="tab" data-id="file-2">
-                <span class="tab-icon"><i class="fas fa-file-code"></i></span>
-                <span class="tab-label">styles.css</span>
-                <button class="close-btn"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="tab" data-id="file-3">
-                <span class="tab-icon"><i class="fas fa-file-code"></i></span>
-                <span class="tab-label">script.js</span>
-                <button class="close-btn"><i class="fas fa-times"></i></button>
-            </div>
+        <div class="tab-bar file-tab-bar" id="file-tab-bar">
+            <!-- Tabs will be added here by JavaScript -->
             <button class="add-btn" id="add-file">
                 <i class="fas fa-plus"></i> New File
             </button>
@@ -62,44 +40,7 @@
                     <h3><i class="fas fa-folder-tree"></i> Project Structure</h3>
                 </div>
                 <div class="directory-tree" id="directory-tree">
-                    <ul>
-                        <li class="project-item expanded" data-id="project-1">
-                            <div class="tree-node">
-                                <span class="toggle"><i class="fas fa-chevron-down"></i></span>
-                                <span class="icon"><i class="fas fa-folder-open"></i></span>
-                                <span class="label">My Project</span>
-                            </div>
-                            <ul>
-                                <li class="folder-item expanded" data-id="folder-1">
-                                    <div class="tree-node">
-                                        <span class="toggle"><i class="fas fa-chevron-down"></i></span>
-                                        <span class="icon"><i class="fas fa-folder"></i></span>
-                                        <span class="label">Main</span>
-                                    </div>
-                                    <ul>
-                                        <li class="file-item active" data-id="file-1">
-                                            <div class="tree-node">
-                                                <span class="icon"><i class="fas fa-file-code"></i></span>
-                                                <span class="label">index.html</span>
-                                            </div>
-                                        </li>
-                                        <li class="file-item" data-id="file-2">
-                                            <div class="tree-node">
-                                                <span class="icon"><i class="fas fa-file-code"></i></span>
-                                                <span class="label">styles.css</span>
-                                            </div>
-                                        </li>
-                                        <li class="file-item" data-id="file-3">
-                                            <div class="tree-node">
-                                                <span class="icon"><i class="fas fa-file-code"></i></span>
-                                                <span class="label">script.js</span>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
+                    <!-- Will be populated by JavaScript -->
                 </div>
             </div>
 
